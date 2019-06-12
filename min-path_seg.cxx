@@ -349,7 +349,14 @@ int DoIt2(int argc, char *argv[], OptimizerType* optimizer, int interpolatorchoi
         return EXIT_FAILURE;
         }
 
+    std::cerr << "Optimizer stop: " << optimizer->GetStopConditionDescription() << std::endl;
 
+    // using AWriterType = itk::ImageFileWriter< typename PathFilterType::InputImageType >;
+    // typename AWriterType::Pointer Awriter = AWriterType::New();
+    // Awriter->SetFileName( "arrival.mha" );
+    // Awriter->SetInput( pathFilter->GetCurrentArrivalFunction() );
+    // Awriter->Update();
+     
     //// create dm to get max-inscribed sphere radius for the point data in the vector/mesh output and for the max-sphere segementation
     typedef itk::MorphologicalDistanceTransformImageFilter<InputImageType, DMImageType> DMFilterType;
     typename DMFilterType::Pointer dm= DMFilterType::New();
@@ -633,10 +640,10 @@ int DoIt(int argc, char *argv[]){
 	typedef itk::RegularStepGradientDescentOptimizer OptimizerType;
 	typename OptimizerType::Pointer optimizer = OptimizerType::New();
 	optimizer->SetNumberOfIterations(atoi(argv[6]));
-	optimizer->SetRelaxationFactor(.5);
+	optimizer->SetRelaxationFactor(0.5);
 	
 	optimizer->SetMaximumStepLength(atof(argv[7]));
-	optimizer->SetMinimumStepLength(atof(argv[7])/5);
+	optimizer->SetMinimumStepLength(atof(argv[7])/20);
         std::cout << "Using optimizer: " << optimizer->GetNameOfClass() << std::endl;
         res= DoIt2<InputComponentType, InputPixelType, Dimension, OptimizerType>(argc, argv, optimizer);
         }break;
