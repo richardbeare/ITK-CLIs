@@ -12,6 +12,7 @@
 #include <itkParabolicOpenImageFilter.h>
 #include <itkRescaleIntensityImageFilter.h>
 #include <itkLinearInterpolateImageFunction.h>
+#include <itkLinearInterpolateSelectedNeighborsImageFunction.h>
 #include <itkSpeedFunctionToPathFilter.h>
 #include <itkMorphologicalDistanceTransformImageFilter.h>
 #include "itkInverseGradientDescentOptimizer.h"
@@ -240,26 +241,29 @@ int DoIt2(int argc, char *argv[], OptimizerType* optimizer, int interpolatorchoi
     typedef typename PathFilterType::CostFunctionType::CoordRepType CoordRepType;
 
     std::cout << "Illegal value " <<  static_cast< typename PathFilterType::InputImagePixelType >( itk::NumericTraits< typename PathFilterType::InputImagePixelType >::max()/2 ) << std::endl;
-    // Create interpolator - two choices
-    // don't use the selected neighbours one with the neighbourhood optimizer
-    typedef itk::LinearInterpolateSelectedNeighborsImageFunction<SpeedImageType, CoordRepType, ValidNeighbor<typename PathFilterType::InputImagePixelType> > SelectedInterpolatorType; 
-    typename SelectedInterpolatorType::Pointer interpS = SelectedInterpolatorType::New();
 
+    // Create interpolator
     typedef itk::LinearInterpolateImageFunction<SpeedImageType, CoordRepType> InterpolatorType;
     typename InterpolatorType::Pointer interp = InterpolatorType::New();
-    
+
+    // Create interpolator for gradient
+    // don't use the selected neighbours one with the neighbourhood optimizer
+    typedef itk::LinearInterpolateSelectedNeighborsImageFunction<SpeedImageType, CoordRepType, ValidNeighbor<typename PathFilterType::InputImagePixelType>> InterpolatorTypeG;
+    typename InterpolatorTypeG::Pointer interpG = InterpolatorTypeG::New();
+
     // Create cost function
     typename PathFilterType::CostFunctionType::Pointer cost = PathFilterType::CostFunctionType::New();
     if (interpolatorchoice == 1) 
-      {
-      std::cout << "Using selected neighbour interpolator" << std::endl;
-      cost->SetInterpolator(interpS);
-      } 
+	{
+	std::cout << "Using selected neighbour interpolator" << std::endl;
+	cost->SetInterpolator(interpG);
+	} 
     else
-      {
-      cost->SetInterpolator(interp);
-      }
+	{
+	cost->SetInterpolator(interp);
+	}
     cost->SetDerivativeThreshold(itk::NumericTraits<typename PathFilterType::InputImagePixelType>::max());
+    std::cerr << "DerivativeThreshold: " << cost->GetDerivativeThreshold() << std::endl;
 
     itk::CStyleCommand::Pointer eventCallbackITK;
     eventCallbackITK = itk::CStyleCommand::New();
@@ -760,6 +764,9 @@ void GetImageType (std::string fileName,
     itk::ImageFileReader<ImageType>::Pointer imageReader= itk::ImageFileReader<ImageType>::New();
     imageReader->SetFileName(fileName.c_str());
     imageReader->UpdateOutputInformation();
+
+    if(!imageReader->GetImageIO()->CanStreamRead())
+        std::cerr << "Cannot stream the reading of the input. Streaming will be inefficient!" << std::endl;
 
     pixelType = imageReader->GetImageIO()->GetPixelType();
     componentType = imageReader->GetImageIO()->GetComponentType();

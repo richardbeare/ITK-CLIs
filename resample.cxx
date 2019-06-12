@@ -308,6 +308,9 @@ void GetImageType (std::string fileName,
     imageReader->SetFileName(fileName.c_str());
     imageReader->UpdateOutputInformation();
 
+    if(!imageReader->GetImageIO()->CanStreamRead())
+        std::cerr << "Cannot stream the reading of the input. Streaming will be inefficient!" << std::endl;
+
     pixelType = imageReader->GetImageIO()->GetPixelType();
     componentType = imageReader->GetImageIO()->GetComponentType();
     dimensionType= imageReader->GetImageIO()->GetNumberOfDimensions();
@@ -339,6 +342,22 @@ int main(int argc, char *argv[]){
 
         return EXIT_FAILURE;
         }
+
+    int CompChunk= atoi(argv[3]);
+    std::cerr << std::endl;
+    if(CompChunk == 0){
+	std::cerr << "Employing no compression and no streaming." << std::endl;
+	}
+    else if (CompChunk == 1){
+	std::cerr << "Employing compression (streaming not possible then)." << std::endl;
+	}
+    else if (CompChunk > 1){
+	std::cerr << "Employing streaming (compression not possible then)." << std::endl;
+	}
+    else {
+	std::cerr << "compress|stream-chunks must be a positive integer" << std::endl;
+        return EXIT_FAILURE;
+	}
 
     itk::ImageIOBase::IOPixelType pixelType;
     typename itk::ImageIOBase::IOComponentType componentType;

@@ -20,10 +20,9 @@ RUN curl -s https://cmake.org/files/v3.11/cmake-3.11.4-Linux-x86_64.sh -o cmake.
 RUN sh cmake.sh --prefix=/usr --exclude-subdir --skip-license
 
 ### ITK
-RUN git clone -b v4.13.1 --depth 1 https://itk.org/ITK.git 
+RUN git clone https://github.com/romangrothausmann/ITK && cd ITK && git checkout 4295eca718ba5f9d83b2cb6e99ee885911d97207
+RUN cd ITK && git submodule add -f https://github.com/richardbeare/ITKMinimalPathExtraction Modules/Remote/MinimalPathExtraction/ # get commits not yet included in upstream before running cmake
 
-### Module_StreamingSinc needs to be downloaded separately:
-RUN git clone https://github.com/blowekamp/itkStreamingSinc/ ITK/Modules/External/itkStreamingSinc/
 
 RUN mkdir -p ITK_build && \
     cd ITK_build && \
